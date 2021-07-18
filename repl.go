@@ -36,7 +36,8 @@ func validateInput(input string) {
 		os.Exit(1)
 	}
 	if input != ".exit" {
-		fmt.Printf("Unrecognized command %s", input)
+		fmt.Printf("Unrecognized command %s \n ", input)
+	} else {
+		os.Exit(0)
 	}
-	os.Exit(0)
 }
