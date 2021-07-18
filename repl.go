@@ -8,24 +8,28 @@ import (
 	"strings"
 )
 
-func repl(stdin io.Reader) error {
+// repl provides a repl for the db users to input statements
+func repl(stdin io.Reader) {
 	for {
 		printPrompt()
 		s := readInput(stdin)
 		validateInput(s)
-		os.Exit(0)
 	}
 }
+
+// printPrompt prints a cmd prompt to users
 func printPrompt() {
 	fmt.Printf("db >")
 }
 
+// readInput reads std input and trimspaces around the input
 func readInput(stdin io.Reader) string {
 	reader := bufio.NewReader(stdin)
 	s, _ := reader.ReadString('\n')
 	return strings.TrimSpace(s)
 }
 
+// validateInput validates that input is validate and recognized
 func validateInput(input string) {
 	if len(input) < 1 {
 		fmt.Println("Error reading input")
@@ -34,4 +38,5 @@ func validateInput(input string) {
 	if input != ".exit" {
 		fmt.Printf("Unrecognized command %s", input)
 	}
+	os.Exit(0)
 }
