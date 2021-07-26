@@ -11,7 +11,6 @@ import (
 const (
 	ExitCommand = ".exit"
 	ExitSuccess = 0
-	ExitFailure = 1
 )
 
 // repl provides a repl for the db users to input statements
@@ -25,8 +24,6 @@ func repl(stdin io.Reader) {
 		stmnt, m := prepareStatement(s)
 		if m == PrepareStatementSuccess {
 			executeStatement(stmnt)
-		} else {
-			os.Exit(ExitFailure)
 		}
 	}
 }
@@ -50,6 +47,5 @@ func handleMetaCommand(input string) {
 		os.Exit(ExitSuccess)
 	default:
 		fmt.Printf("Unrecognized command %s \n ", input)
-		os.Exit(ExitFailure)
 	}
 }

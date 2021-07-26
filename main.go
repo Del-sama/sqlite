@@ -5,5 +5,7 @@ import (
 )
 
 func main() {
+	var table T = Table{}
+	table.createNewTable()
 	repl(os.Stdin)
 }

@@ -8,8 +8,6 @@ import (
 const (
 	StatementInsert = iota
 	StatementSelect
-	StatementDelete
-	StatementUpdate
 )
 
 const (
@@ -34,17 +32,6 @@ type Row struct {
 	email    string
 }
 
-type Table struct {
-	rowCount int
-	rows     []Row
-}
-
-type T interface {
-	createNewTable() *Table
-	insertToTable(s *Statement) int
-	selectAll() int
-}
-
 // prepareStatement assigns recognized statements to the respective statement types
 func prepareStatement(input string) (*Statement, int) {
 	s := Statement{}
@@ -54,10 +41,6 @@ func prepareStatement(input string) (*Statement, int) {
 		return prepareInsert(s, input)
 	case strings.HasPrefix(input, "select "):
 		return prepareSelect(s)
-	case strings.HasPrefix(input, "update "):
-		return prepareUpdate(s)
-	case strings.HasPrefix(input, "delete "):
-		return prepareDelete(s)
 	default:
 		fmt.Printf("Unrecognized keyword at start of '%s' ", input)
 		return &s, PrepareStatementUnrecognized
@@ -65,17 +48,12 @@ func prepareStatement(input string) (*Statement, int) {
 }
 
 func executeStatement(statement *Statement) int {
-	var table T
-	table = Table{}
+	var table T = Table{}
 	switch statement.StatementType {
 	case StatementInsert:
 		return table.insertToTable(statement)
 	case StatementSelect:
 		return table.selectAll()
-	//case StatementUpdate:
-	//	fmt.Println("Executing update statement")
-	//case StatementDelete:
-	//	fmt.Println("Executing delete statement")
 	default:
 		fmt.Println("Unrecognized statement")
 		return ExecuteFailure
@@ -99,33 +77,4 @@ func prepareInsert(s Statement, input string) (*Statement, int) {
 func prepareSelect(stmnt Statement) (*Statement, int) {
 	stmnt.StatementType = StatementSelect
 	return &stmnt, PrepareStatementSuccess
-}
-
-func prepareUpdate(stmnt Statement) (*Statement, int) {
-	stmnt.StatementType = StatementUpdate
-	return &stmnt, PrepareStatementSuccess
-}
-
-func prepareDelete(stmnt Statement) (*Statement, int) {
-	stmnt.StatementType = StatementDelete
-	return &stmnt, PrepareStatementSuccess
-}
-
-func (t Table) insertToTable(s *Statement) int {
-	t.rows = append(t.rows, s.InsertRow)
-	t.rowCount += 1
-	return ExecuteSuccess
-}
-
-func (t Table) selectAll() int {
-	for _, row := range t.rows {
-		fmt.Printf("%v \n", row)
-	}
-	return ExecuteSuccess
-}
-
-func (t Table) createNewTable() *Table {
-	t.rowCount = 0
-	t.rows = make([]Row, 0)
-	return &t
 }
