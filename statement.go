@@ -18,8 +18,14 @@ const (
 	PrepareStatementSyntaxError
 )
 
+const (
+	ExecuteSuccess = iota
+	ExecuteFailure
+)
+
 type Statement struct {
-	t int
+	StatementType int
+	InsertRow     Row
 }
 
 type Row struct {
@@ -28,67 +34,98 @@ type Row struct {
 	email    string
 }
 
+type Table struct {
+	rowCount int
+	rows     []Row
+}
+
+type T interface {
+	createNewTable() *Table
+	insertToTable(s *Statement) int
+	selectAll() int
+}
+
 // prepareStatement assigns recognized statements to the respective statement types
 func prepareStatement(input string) (*Statement, int) {
 	s := Statement{}
 
 	switch {
 	case strings.HasPrefix(input, "insert "):
-		return handleInsert(s, input)
+		return prepareInsert(s, input)
 	case strings.HasPrefix(input, "select "):
-		return handleSelect(s, input)
+		return prepareSelect(s)
 	case strings.HasPrefix(input, "update "):
-		return handleUpdate(s, input)
+		return prepareUpdate(s)
 	case strings.HasPrefix(input, "delete "):
-		return handleDelete(s, input)
+		return prepareDelete(s)
 	default:
 		fmt.Printf("Unrecognized keyword at start of '%s' ", input)
 		return &s, PrepareStatementUnrecognized
 	}
 }
 
-func executeStatement(statement *Statement) {
-	switch statement.t {
+func executeStatement(statement *Statement) int {
+	var table T
+	table = Table{}
+	switch statement.StatementType {
 	case StatementInsert:
-		fmt.Println("Executing insert statement")
+		return table.insertToTable(statement)
 	case StatementSelect:
-		fmt.Println("Executing select statement")
-	case StatementUpdate:
-		fmt.Println("Executing update statement")
-	case StatementDelete:
-		fmt.Println("Executing delete statement")
+		return table.selectAll()
+	//case StatementUpdate:
+	//	fmt.Println("Executing update statement")
+	//case StatementDelete:
+	//	fmt.Println("Executing delete statement")
+	default:
+		fmt.Println("Unrecognized statement")
+		return ExecuteFailure
 	}
 }
 
-func handleInsert(stmnt Statement, input string) (*Statement, int) {
-	stmnt.t = StatementInsert
+func prepareInsert(s Statement, input string) (*Statement, int) {
+	s.StatementType = StatementInsert
 	i := Row{}
 	_, err := fmt.Sscanf(input, "insert %d %s %s", &i.id, &i.username, &i.email)
+	s.InsertRow = i
+	fmt.Println(err)
+	fmt.Println(s)
+
 	if err != nil {
-		return &stmnt, PrepareStatementSyntaxError
+		return &s, PrepareStatementSyntaxError
 	}
+	return &s, PrepareStatementSuccess
+}
+
+func prepareSelect(stmnt Statement) (*Statement, int) {
+	stmnt.StatementType = StatementSelect
 	return &stmnt, PrepareStatementSuccess
 }
 
-func handleSelect(stmnt Statement, input string) (*Statement, int) {
-	stmnt.t = StatementSelect
+func prepareUpdate(stmnt Statement) (*Statement, int) {
+	stmnt.StatementType = StatementUpdate
 	return &stmnt, PrepareStatementSuccess
 }
 
-func handleUpdate(stmnt Statement, input string) (*Statement, int) {
-	stmnt.t = StatementUpdate
+func prepareDelete(stmnt Statement) (*Statement, int) {
+	stmnt.StatementType = StatementDelete
 	return &stmnt, PrepareStatementSuccess
 }
 
-func handleDelete(stmnt Statement, input string) (*Statement, int) {
-	stmnt.t = StatementDelete
-	return &stmnt, PrepareStatementSuccess
+func (t Table) insertToTable(s *Statement) int {
+	t.rows = append(t.rows, s.InsertRow)
+	t.rowCount += 1
+	return ExecuteSuccess
 }
 
-+const uint32_t ID_SIZE = size_of_attribute(Row, id);
-+const uint32_t USERNAME_SIZE = size_of_attribute(Row, username);
-+const uint32_t EMAIL_SIZE = size_of_attribute(Row, email);
-+const uint32_t ID_OFFSET = 0;
-+const uint32_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
-+const uint32_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
-+const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
+func (t Table) selectAll() int {
+	for _, row := range t.rows {
+		fmt.Printf("%v \n", row)
+	}
+	return ExecuteSuccess
+}
+
+func (t Table) createNewTable() *Table {
+	t.rowCount = 0
+	t.rows = make([]Row, 0)
+	return &t
+}
