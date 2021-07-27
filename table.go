@@ -9,14 +9,14 @@ type Table struct {
 
 type T interface {
 	createNewTable() *Table
-	insertToTable(s *Statement) int
+	insertToTable(s *Statement) (int, *Table)
 	selectAll() int
 }
 
-func (t Table) insertToTable(s *Statement) int {
+func (t Table) insertToTable(s *Statement) (int, *Table) {
 	t.rows = append(t.rows, s.InsertRow)
 	t.rowCount += 1
-	return ExecuteSuccess
+	return ExecuteSuccess, &t
 }
 
 func (t Table) selectAll() int {
@@ -31,3 +31,5 @@ func (t Table) createNewTable() *Table {
 	t.rows = make([]Row, 0)
 	return &t
 }
+
+

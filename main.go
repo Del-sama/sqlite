@@ -2,10 +2,12 @@ package main
 
 import (
 	"os"
+	"fmt"
 )
 
 func main() {
 	var table T = Table{}
-	table.createNewTable()
-	repl(os.Stdin)
+	t := table.createNewTable()
+	fmt.Println(t)
+	repl(os.Stdin, t)
 }

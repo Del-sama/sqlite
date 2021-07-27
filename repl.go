@@ -14,7 +14,7 @@ const (
 )
 
 // repl provides a repl for the db users to input statements
-func repl(stdin io.Reader) {
+func repl(stdin io.Reader, table *T) {
 	for {
 		printPrompt()
 		s := readInput(stdin)
@@ -23,7 +23,7 @@ func repl(stdin io.Reader) {
 		}
 		stmnt, m := prepareStatement(s)
 		if m == PrepareStatementSuccess {
-			executeStatement(stmnt)
+			executeStatement(stmnt, table)
 		}
 	}
 }

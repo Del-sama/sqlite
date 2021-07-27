@@ -35,23 +35,22 @@ type Row struct {
 // prepareStatement assigns recognized statements to the respective statement types
 func prepareStatement(input string) (*Statement, int) {
 	s := Statement{}
-
 	switch {
-	case strings.HasPrefix(input, "insert "):
+	case strings.HasPrefix(input, "insert"):
 		return prepareInsert(s, input)
-	case strings.HasPrefix(input, "select "):
+	case strings.HasPrefix(input, "select"):
 		return prepareSelect(s)
 	default:
-		fmt.Printf("Unrecognized keyword at start of '%s' ", input)
+		fmt.Printf("Unrecognized keyword at start of '%s' \n", input)
 		return &s, PrepareStatementUnrecognized
 	}
 }
 
-func executeStatement(statement *Statement) int {
-	var table T = Table{}
+func executeStatement(statement *Statement, table *T) int {
 	switch statement.StatementType {
 	case StatementInsert:
-		return table.insertToTable(statement)
+		m, table := table.insertToTable(statement)
+		return m
 	case StatementSelect:
 		return table.selectAll()
 	default:
