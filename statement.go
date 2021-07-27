@@ -46,11 +46,10 @@ func prepareStatement(input string) (*Statement, int) {
 	}
 }
 
-func executeStatement(statement *Statement, table *T) int {
+func executeStatement(statement *Statement, table *Table) int {
 	switch statement.StatementType {
 	case StatementInsert:
-		m, table := table.insertToTable(statement)
-		return m
+		return table.insertToTable(statement)
 	case StatementSelect:
 		return table.selectAll()
 	default:
