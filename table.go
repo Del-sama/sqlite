@@ -39,7 +39,7 @@ type Table struct {
 }
 
 type T interface {
-	createNewTable() *Table
+	dbOpen() *Table
 	insertToTable(s *Statement) int
 	selectAll() int
 }
@@ -100,19 +100,24 @@ func prepareSelect(stmnt Statement) (*Statement, int) {
 }
 
 func (t *Table) insertToTable(s *Statement) int {
+	// marshall row and write to file
+	// write row count to botton of file
 	t.rows = append(t.rows, s.InsertRow)
 	t.rowCount += 1
 	return ExecuteSuccess
 }
 
 func (t *Table) selectAll() int {
+	// Loop through file, unmarshall and return
 	for _, row := range t.rows {
 		fmt.Printf("%v \n", row)
 	}
 	return ExecuteSuccess
 }
 
-func (t *Table) createNewTable() *Table {
+func (t *Table) dbOpen(filename string) *Table {
+	// open file
+	// get row count from bottom of file
 	t.rowCount = 0
 	t.rows = make([]Row, 0)
 	return t

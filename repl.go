@@ -21,6 +21,7 @@ func repl(stdin io.Reader, table *Table) {
 		if strings.HasPrefix(s, ".") {
 			if err := handleMetaCommand(s); err != nil {
 				fmt.Println(err)
+			}
 		}
 		stmnt, m := prepareStatement(s)
 		if m == PrepareStatementSuccess {
