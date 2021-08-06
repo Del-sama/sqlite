@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -28,18 +32,20 @@ type Statement struct {
 }
 
 type Row struct {
-	id       int
-	username string
-	email    string
+	Id       int
+	Username string
+	Email    string
 }
 
 type Table struct {
+	file     *os.File
 	rowCount int
-	rows     []Row
 }
 
 type T interface {
-	dbOpen() *Table
+	dbOpen(filename string) (*Table, error)
+	dbClose()
+	getRowCount(filename string) int
 	insertToTable(s *Statement) int
 	selectAll() int
 }
@@ -76,17 +82,15 @@ func prepareInsert(s Statement, input string) (*Statement, int) {
 	var username string
 	var email string
 
-	_, err := fmt.Sscanf(input, "insert %d %s %s", &i.id, &username, &email)
+	_, err := fmt.Sscanf(input, "insert %d %s %s", &i.Id, &username, &email)
 
 	if err != nil {
 		return &s, PrepareStatementSyntaxError
 	}
 	if err = i.SetUsername(username); err != nil {
-		fmt.Println(err)
 		return &s, PrepareStatementSyntaxError
 	}
 	if err = i.SetEmail(email); err != nil {
-		fmt.Println(err)
 		return &s, PrepareStatementSyntaxError
 	}
 	s.InsertRow = i
@@ -99,35 +103,65 @@ func prepareSelect(stmnt Statement) (*Statement, int) {
 	return &stmnt, PrepareStatementSuccess
 }
 
+func (t *Table) dbOpen(filename string) (*Table, error) {
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
+	if err != nil {
+		return nil, err
+	}
+	t.file = f
+	t.rowCount = t.getRowCount()
+	return t, nil
+}
+
+func (t *Table) getRowCount() int {
+	f := t.file
+	scanner := bufio.NewScanner(f)
+	var line int
+	for scanner.Scan() {
+		if line == 0 {
+			count, err := strconv.Atoi(scanner.Text())
+			if err != nil {
+				fmt.Println(err)
+			}
+			return count
+		}
+	}
+	return 0
+}
+
+func (t *Table) dbClose() {
+	f := t.file
+	f.Close()
+}
+
 func (t *Table) insertToTable(s *Statement) int {
-	// marshall row and write to file
-	// write row count to botton of file
-	t.rows = append(t.rows, s.InsertRow)
+	f := t.file
+	en := json.NewEncoder(f)
+	if err := en.Encode(s.InsertRow); err != nil {
+		return ExecuteFailure
+	}
 	t.rowCount += 1
 	return ExecuteSuccess
 }
 
 func (t *Table) selectAll() int {
-	// Loop through file, unmarshall and return
-	for _, row := range t.rows {
-		fmt.Printf("%v \n", row)
+	f := t.file
+	scanner := bufio.NewScanner(f)
+	var line int
+	for scanner.Scan() {
+		if line != 0 {
+			fmt.Printf("%v \n", scanner.Text())
+		}
+		line++
 	}
 	return ExecuteSuccess
-}
-
-func (t *Table) dbOpen(filename string) *Table {
-	// open file
-	// get row count from bottom of file
-	t.rowCount = 0
-	t.rows = make([]Row, 0)
-	return t
 }
 
 func (r *Row) SetUsername(username string) error {
 	if len(username) > 32 {
 		return errors.New("username is too long, max size is 32")
 	}
-	r.username = username
+	r.Username = username
 	return nil
 }
 
@@ -135,6 +169,6 @@ func (r *Row) SetEmail(email string) error {
 	if len(email) > 255 {
 		return errors.New("email is too long, max size is 255")
 	}
-	r.email = email
+	r.Email = email
 	return nil
 }

@@ -19,7 +19,7 @@ func repl(stdin io.Reader, table *Table) {
 		printPrompt()
 		s := readInput(stdin)
 		if strings.HasPrefix(s, ".") {
-			if err := handleMetaCommand(s); err != nil {
+			if err := handleMetaCommand(s, table); err != nil {
 				fmt.Println(err)
 			}
 		}
@@ -43,11 +43,12 @@ func readInput(stdin io.Reader) string {
 }
 
 // handleMetaCommand executes meta commands
-func handleMetaCommand(input string) error {
+func handleMetaCommand(input string, table *Table) error {
 	if input == ExitCommand {
+		table.dbClose()
 		os.Exit(ExitSuccess)
 		return nil
 	} else {
-		return fmt.Errorf("Unrecognized command %s \n ", input)
+		return fmt.Errorf("unrecognized command %s \n ", input)
 	}
 }
