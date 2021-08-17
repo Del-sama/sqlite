@@ -11,21 +11,25 @@ import (
 const (
 	ExitCommand = ".exit"
 	ExitSuccess = 0
+	ExitFailure = 1
 )
 
 // repl provides a repl for the db users to input statements
-func repl(stdin io.Reader, table *Table) {
+func repl(scanner *bufio.Scanner, stdin io.Reader, table *Table) error {
 	for {
 		printPrompt()
 		s := readInput(stdin)
 		if strings.HasPrefix(s, ".") {
-			if err := handleMetaCommand(s, table); err != nil {
-				fmt.Println(err)
+			if err := handleMetaCommand(s, scanner, table); err != nil {
+				return err
 			}
 		}
-		stmnt, m := prepareStatement(s)
-		if m == PrepareStatementSuccess {
-			executeStatement(stmnt, table)
+		stmnt, err := prepareStatement(s)
+		if err != nil {
+			return err
+		}
+		if err := executeStatement(scanner, stmnt, table); err != nil {
+			return err
 		}
 	}
 }
@@ -43,9 +47,9 @@ func readInput(stdin io.Reader) string {
 }
 
 // handleMetaCommand executes meta commands
-func handleMetaCommand(input string, table *Table) error {
+func handleMetaCommand(input string, scanner *bufio.Scanner, table *Table) error {
 	if input == ExitCommand {
-		table.dbClose()
+		table.dbClose(scanner)
 		os.Exit(ExitSuccess)
 		return nil
 	} else {
