@@ -15,12 +15,12 @@ const (
 )
 
 // repl provides a repl for the db users to input statements
-func repl(scanner *bufio.Scanner, stdin io.Reader, table *Table) error {
+func repl(stdin io.Reader, table *Table) error {
 	for {
 		printPrompt()
 		s := readInput(stdin)
 		if strings.HasPrefix(s, ".") {
-			if err := handleMetaCommand(s, scanner, table); err != nil {
+			if err := handleMetaCommand(s, table); err != nil {
 				return err
 			}
 		}
@@ -28,7 +28,7 @@ func repl(scanner *bufio.Scanner, stdin io.Reader, table *Table) error {
 		if err != nil {
 			return err
 		}
-		if err := executeStatement(scanner, stmnt, table); err != nil {
+		if err := executeStatement(stmnt, table); err != nil {
 			return err
 		}
 	}
@@ -47,9 +47,9 @@ func readInput(stdin io.Reader) string {
 }
 
 // handleMetaCommand executes meta commands
-func handleMetaCommand(input string, scanner *bufio.Scanner, table *Table) error {
+func handleMetaCommand(input string, table *Table) error {
 	if input == ExitCommand {
-		table.dbClose(scanner)
+		table.dbClose()
 		os.Exit(ExitSuccess)
 		return nil
 	} else {
